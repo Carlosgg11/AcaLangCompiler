@@ -21,6 +21,23 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         }
         return null;
     }
+    
+    // 9. Asignación de variables (Actualizar valores)
+    @Override
+    public Object visitAsignacion(AcaLangParser.AsignacionContext ctx) {
+        // 1. Obtenemos el nombre de la variable (ej. "contador")
+        String nombreVar = ctx.ID().getText();
+        
+        // 2. Calculamos el nuevo valor evaluando la expresión (ej. 5 - 1)
+        Object nuevoValor = visit(ctx.expresion());
+        
+        // 3. ¡El paso vital! Sobrescribimos el valor en la memoria del Intérprete
+        memoria.put(nombreVar, nuevoValor); 
+        // Nota: si tu HashMap en esta clase se llama distinto (ej. 'tablaVariables'), 
+        // cambia 'memoria' por ese nombre.
+
+        return null;
+    }
 
     // 2. Instrucción imprimir
     @Override
@@ -153,6 +170,26 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
                 // Ejecutamos todo lo que está en el segundo bloque { }
                 visit(ctx.programa(1));
             }
+        }
+        
+        return null;
+    }
+    
+    // 8. Ciclo MIENTRAS
+    @Override
+    public Object visitMientras(AcaLangParser.MientrasContext ctx) {
+        // Un ciclo 'mientras' se repite continuamente evaluando la condición
+        while (true) {
+            // Evaluamos la condición en CADA iteración
+            Object condicion = visit(ctx.expresion());
+            
+            // Si la condición es false (o no es booleana), rompemos el ciclo para que no sea infinito
+            if (!(condicion instanceof Boolean) || !(Boolean) condicion) {
+                break;
+            }
+            
+            // Si la condición fue true, ejecutamos todo el bloque de código { }
+            visit(ctx.programa());
         }
         
         return null;
