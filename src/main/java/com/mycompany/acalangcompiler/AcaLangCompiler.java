@@ -18,7 +18,7 @@ public class AcaLangCompiler {
                "} " +
                "imprimir(\"¡Despegue!\");";
 
-            System.out.println("--- Iniciando Compilación ---");
+            System.out.println("--- Iniciando Compilacion ---");
 
             // 1. Fase Léxica y Sintáctica
             AcaLangLexer lexer = new AcaLangLexer(CharStreams.fromString(input));
@@ -36,7 +36,7 @@ public class AcaLangCompiler {
             Interprete interprete = new Interprete();
             interprete.visit(tree);
 
-            System.out.println("--- Proceso finalizado con éxito ---");
+            System.out.println("--- Proceso finalizado con exito ---");
 
         } catch (Exception e) {
             System.err.println("Error en el compilador: " + e.getMessage());

@@ -17,18 +17,18 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
         String nombreVar = ctx.ID().getText();
         
         if (!tablaSimbolos.containsKey(nombreVar)) {
-            System.err.println("Error Semántico: Intentas usar '" + nombreVar + "' pero no ha sido declarada.");
+            System.err.println("Error Semantico: Intentas usar '" + nombreVar + "' pero no ha sido declarada.");
         }
         return super.visitAsignacion(ctx);
     }
     
     @Override
     public Object visitSiCondicional(AcaLangParser.SiCondicionalContext ctx) {
-        System.out.println("Semántico: Analizando estructura SI...");
+        System.out.println("Semantico: Analizando estructura SI...");
     
         // Verificamos si existe el bloque 'sino' (es el segundo bloque de 'programa' en la regla)
         if (ctx.programa().size() > 1) {
-            System.out.println("Semántico: Se detectó un bloque SINO asociado.");
+            System.out.println("Semantico: Se detecto un bloque SINO asociado.");
         }
     
         return super.visitSiCondicional(ctx);
@@ -52,7 +52,7 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
     public String visitVariable(AcaLangParser.VariableContext ctx) {
         String nombreVar = ctx.ID().getText();
         if (!tablaSimbolos.containsKey(nombreVar)) {
-            System.err.println("Error Semántico: Variable '" + nombreVar + "' no declarada.");
+            System.err.println("Error Semantico: Variable '" + nombreVar + "' no declarada.");
             return "error"; 
         }
         return tablaSimbolos.get(nombreVar); 
@@ -67,7 +67,7 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
         if (!tablaSimbolos.containsKey(nombreVar)) {
             tablaSimbolos.put(nombreVar, tipoDeclarado);
         } else {
-            System.err.println("Error Semántico: La variable '" + nombreVar + "' ya existe.");
+            System.err.println("Error Semantico: La variable '" + nombreVar + "' ya existe.");
         }
 
         if (ctx.expresion() != null) {
@@ -79,7 +79,7 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
                 System.err.println("Error de Tipo: No puedes asignar un valor '" + tipoExpresion + 
                                    "' a la variable '" + nombreVar + "' que es de tipo '" + tipoDeclarado + "'.");
             } else {
-                System.out.println("Semántico: Asignación correcta para '" + nombreVar + "' (" + tipoDeclarado + ").");
+                System.out.println("Semantico: Asignacion correcta para '" + nombreVar + "' (" + tipoDeclarado + ").");
             }
         }
         return null;
@@ -113,7 +113,7 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
              return "ent";
         }
 
-        System.err.println("Error de Tipo: Operación inválida entre '" + izq + "' y '" + der + "'.");
+        System.err.println("Error de Tipo: Operacion invalida entre '" + izq + "' y '" + der + "'.");
         return "error";
     }
     
@@ -153,7 +153,7 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
                                (tipoDer.equals("ent") || tipoDer.equals("dec"));
 
         if (!tipoIzq.equals(tipoDer) && !ambosNumeros) {
-            System.err.println("Error de Lógica: No puedes comparar un '" + tipoIzq + "' con un '" + tipoDer + "'.");
+            System.err.println("Error de Logica: No puedes comparar un '" + tipoIzq + "' con un '" + tipoDer + "'.");
             return "error";
         }
         
@@ -167,7 +167,7 @@ public class AnalizadorSemantico extends AcaLangBaseVisitor<Object> {
         if (tipoCondicion.equals("error")) return "error";
 
         if (!tipoCondicion.equals("bol")) {
-            System.err.println("Error de Lógica: La condición del ciclo 'mientras' debe ser un 'bol', pero recibí un '" + tipoCondicion + "'.");
+            System.err.println("Error de Logica: La condición del ciclo 'mientras' debe ser un 'bol', pero recibi un '" + tipoCondicion + "'.");
             return "error";
         }
 
