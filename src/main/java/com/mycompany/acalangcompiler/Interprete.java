@@ -8,55 +8,98 @@ import java.util.HashMap;
 
 public class Interprete extends AcaLangBaseVisitor<Object> {
     
-    // Esta será nuestra "Memoria RAM". Aquí guardaremos el VALOR real de cada variable.
+    // Nuestra Memoria RAM virtual
     private HashMap<String, Object> memoria = new HashMap<>();
 
-    // 1. Cuando declaramos o asignamos variables
+    // 1. Declaración y Asignación
     @Override
     public Object visitDeclaracion(AcaLangParser.DeclaracionContext ctx) {
         String nombreVar = ctx.ID().getText();
         if (ctx.expresion() != null) {
-            // Evaluamos la expresión para obtener el valor real y lo guardamos
             Object valor = visit(ctx.expresion());
             memoria.put(nombreVar, valor);
         }
         return null;
     }
 
-    // 2. La instrucción 'imprimir'
+    // 2. Instrucción imprimir
     @Override
     public Object visitImprimir(AcaLangParser.ImprimirContext ctx) {
         Object valor = visit(ctx.expresion());
-        // Imprimimos el resultado con un prefijo para distinguirlo
         System.out.println(">> " + valor); 
         return null;
     }
 
-    // 3. Evaluar Literales y Variables
+    // 3. Literales (Enteros, Decimales y Cadenas)
     @Override
     public Object visitEntero(AcaLangParser.EnteroContext ctx) {
-        // Convertimos el texto a un número entero real de Java
         return Integer.parseInt(ctx.getText());
+    }
+    
+    @Override
+    public Object visitDecimal(AcaLangParser.DecimalContext ctx) {
+        return Double.valueOf(ctx.getText());
+    }
+
+    @Override
+    public Object visitCadena(AcaLangParser.CadenaContext ctx) {
+        String texto = ctx.getText();
+        // Quitamos las comillas iniciales y finales: "Hola" -> Hola
+        return texto.substring(1, texto.length() - 1);
     }
 
     @Override
     public Object visitVariable(AcaLangParser.VariableContext ctx) {
-        // Buscamos el valor en nuestra memoria
-        return memoria.get(ctx.getText());
+        String nombreVar = ctx.ID().getText();
+        if (memoria.containsKey(nombreVar)) {
+            return memoria.get(nombreVar);
+        }
+        return 0; // Valor por defecto si no existe
     }
 
-    // 4. Evaluar Matemáticas (Suma y Resta de Enteros)
+    // 4. Matemáticas: Suma y Resta (Soporta Decimales y Textos)
     @Override
     public Object visitSuma(AcaLangParser.SumaContext ctx) {
         Object izq = visit(ctx.expresion(0));
         Object der = visit(ctx.expresion(1));
         String operador = ctx.getChild(1).getText();
 
-        // Como el semántico ya validó que son compatibles, calculamos con confianza
-        if (izq instanceof Integer && der instanceof Integer) {
-            if (operador.equals("+")) return (Integer) izq + (Integer) der;
-            if (operador.equals("-")) return (Integer) izq - (Integer) der;
+        // REGLA 1: Si alguno es String, concatenamos textos
+        if (izq instanceof String || der instanceof String) {
+            if (operador.equals("+")) {
+                return String.valueOf(izq) + String.valueOf(der);
+            }
         }
+
+        // REGLA 2: Si ambos son números (Enteros o Decimales)
+        if (izq instanceof Number && der instanceof Number) {
+            double n1 = ((Number) izq).doubleValue();
+            double n2 = ((Number) der).doubleValue();
+
+            double res = operador.equals("+") ? n1 + n2 : n1 - n2;
+
+            // Si el resultado no tiene decimales (ej. 20.0), lo devolvemos como entero
+            return (res % 1 == 0) ? (int) res : res;
+        }
+
         return 0; 
+    }
+
+    // 5. Matemáticas: Multiplicación y División
+    @Override
+    public Object visitMultiplicacion(AcaLangParser.MultiplicacionContext ctx) {
+        Object izq = visit(ctx.expresion(0));
+        Object der = visit(ctx.expresion(1));
+        String operador = ctx.getChild(1).getText();
+
+        if (izq instanceof Number && der instanceof Number) {
+            double n1 = ((Number) izq).doubleValue();
+            double n2 = ((Number) der).doubleValue();
+
+            double res = operador.equals("*") ? n1 * n2 : n1 / n2;
+
+            return (res % 1 == 0) ? (int) res : res;
+        }
+        return 0;
     }
 }
