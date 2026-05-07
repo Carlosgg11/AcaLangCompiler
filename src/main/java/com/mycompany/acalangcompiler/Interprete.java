@@ -135,4 +135,26 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
 
         return false;
     }
+    
+    // 7. Condicional SI / SINO
+    @Override
+    public Object visitSiCondicional(AcaLangParser.SiCondicionalContext ctx) {
+        // 1. Evaluamos la condición (nos devolverá un true o false gracias a visitComparacion)
+        Object condicion = visit(ctx.expresion());
+
+        // 2. Comprobamos si la condición es verdadera
+        if (condicion instanceof Boolean && (Boolean) condicion) {
+            // Si es true, ejecutamos todo lo que está en el primer bloque { }
+            visit(ctx.programa(0));
+        } else {
+            // Si es false, verificamos si el usuario escribió un 'sino'
+            // (Si hay más de un bloque 'programa', significa que sí hay un 'sino')
+            if (ctx.programa().size() > 1) {
+                // Ejecutamos todo lo que está en el segundo bloque { }
+                visit(ctx.programa(1));
+            }
+        }
+        
+        return null;
+    }
 }
