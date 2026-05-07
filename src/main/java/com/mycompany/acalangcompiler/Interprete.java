@@ -102,4 +102,37 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         }
         return 0;
     }
+    
+    // 6. Operadores Relacionales (Comparaciones)
+    @Override
+    public Object visitComparacion(AcaLangParser.ComparacionContext ctx) {
+        Object izq = visit(ctx.expresion(0));
+        Object der = visit(ctx.expresion(1));
+        String operador = ctx.getChild(1).getText();
+
+        // 1. Si estamos comparando números (Enteros o Decimales)
+        if (izq instanceof Number && der instanceof Number) {
+            double n1 = ((Number) izq).doubleValue();
+            double n2 = ((Number) der).doubleValue();
+
+            switch (operador) {
+                case ">": return n1 > n2;
+                case "<": return n1 < n2;
+                case ">=": return n1 >= n2;
+                case "<=": return n1 <= n2;
+                case "==": return n1 == n2;
+                case "!=": return n1 != n2;
+            }
+        }
+
+        // 2. Si estamos comparando textos u otras cosas (Solo soportan == y !=)
+        if (operador.equals("==")) {
+            return izq.equals(der);
+        }
+        if (operador.equals("!=")) {
+            return !izq.equals(der);
+        }
+
+        return false;
+    }
 }

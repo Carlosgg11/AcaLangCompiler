@@ -19,15 +19,15 @@ instruccion : ID IGUAL expresion PUNTO_COMA                                     
             | 'mientras' PAREN_ABRE expresion PAREN_CIERRA LLAVE_ABRE programa LLAVE_CIERRA     # Mientras
             ;
 
-expresion   : expresion (MULT | DIV) expresion           # Multiplicacion
-            | expresion (SUMA | RESTA) expresion         # Suma
-            | expresion IGUAL_IGUAL expresion            # Comparacion // <--- Nuevo
-            | PAREN_ABRE expresion PAREN_CIERRA          # Parentesis
-            | ID                                         # Variable
-            | LIT_ENT                                    # Entero
-            | LIT_DEC                                    # Decimal 
-            | LIT_CAD                                    # Cadena
-            | LIT_BOL                                    # Booleano
+expresion   : expresion (MULT | DIV) expresion                           # Multiplicacion
+            | expresion (SUMA | RESTA) expresion                         # Suma
+            | expresion ('>' | '<' | '>=' | '<=' | '==' | '!=') expresion # Comparacion
+            | PAREN_ABRE expresion PAREN_CIERRA                          # Parentesis
+            | ID                                                         # Variable
+            | LIT_ENT                                                    # Entero
+            | LIT_DEC                                                    # Decimal 
+            | LIT_CAD                                                    # Cadena
+            | LIT_BOL                                                    # Booleano
             ;
 
 // --- 2. REGLAS LÉXICAS (Tokens) ---
@@ -40,7 +40,6 @@ DIV        : '/' ;
 PAREN_ABRE : '(' ;
 PAREN_CIERRA: ')' ;
 
-IGUAL_IGUAL : '==' ;
 LLAVE_ABRE  : '{' ;
 LLAVE_CIERRA: '}' ;
 

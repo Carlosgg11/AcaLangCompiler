@@ -11,13 +11,10 @@ public class AcaLangCompiler {
     public static void main(String[] args) {
         try {
             
-            String input = "dec propina = 15.5 + 4.5; " +
-                           "cad saludo = \"Hola \"; " +
-                           "cad mensaje = saludo + \"Mundo\"; " +
-                           "cad combinado = \"El total es: \" + propina; " +
-                           "imprimir(propina); " +
-                           "imprimir(mensaje); " +
-                           "imprimir(combinado);";
+            String input = "imprimir(10 > 5); " +
+               "imprimir(10 == 10); " +
+               "imprimir(20 < 5); " +
+               "imprimir(15.5 >= 15.0);";
 
             System.out.println("--- Iniciando Compilación ---");
 
