@@ -18,15 +18,15 @@ instruccion : ID IGUAL expresion PUNTO_COMA                                     
             | MIENTRAS PAREN_ABRE expresion PAREN_CIERRA LLAVE_ABRE programa LLAVE_CIERRA # Mientras
             ;
 
-expresion   : expresion (MULT | DIV) expresion                           # Multiplicacion
-            | expresion (SUMA | RESTA) expresion                         # Suma
-            | expresion op=OP_COMP expresion                             # Comparacion
-            | PAREN_ABRE expresion PAREN_CIERRA                          # Parentesis
-            | ID                                                         # Variable
-            | LIT_ENT                                                    # Entero
-            | LIT_DEC                                                    # Decimal 
-            | LIT_CAD                                                    # Cadena
-            | LIT_BOL                                                    # Booleano
+expresion   : PAREN_ABRE expresion PAREN_CIERRA          # Parentesis
+            | expresion (MULT | DIV) expresion           # Multiplicacion
+            | expresion (SUMA | RESTA) expresion         # Suma
+            | expresion op=OP_COMP expresion             # Comparacion
+            | ID                                         # Variable
+            | LIT_ENT                                    # Entero
+            | LIT_DEC                                    # Decimal 
+            | LIT_CAD                                    # Cadena
+            | LIT_BOL                                    # Booleano
             ;
 
 // --- 2. REGLAS LÉXICAS (Tokens) ---
@@ -66,6 +66,12 @@ LIT_BOL    : 'verdadero' | 'falso' ;
 
 // Identificadores
 ID         : [a-zA-Z][a-zA-Z0-9_]* ;
+
+// Comentarios
+// Ignorar comentarios de una sola línea
+COMMENT : '//' ~[\r\n]* -> skip ;
+// 2. Comentario de bloque (soporta varias líneas)
+COMMENT_BLOQUE : '/*' .*? '*/' -> skip ;
 
 // Ignorar espacios
 WS         : [ \t\r\n]+ -> skip ;

@@ -15,6 +15,13 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
     public void limpiarMemoria() {
         memoria.clear();
     }
+    
+    // Uso de parentesis
+    @Override
+    public Object visitParentesis(AcaLangParser.ParentesisContext ctx) {
+        // IMPORTANTE: visitamos la expresión que está ENTRE los paréntesis
+        return visit(ctx.expresion()); 
+    }
 
     // Declaración y Asignación
     @Override
@@ -28,19 +35,25 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
     }
     
     // Asignación de variables (Actualizar valores)
-    @Override
+   @Override
     public Object visitAsignacion(AcaLangParser.AsignacionContext ctx) {
-        // 1. Obtenemos el nombre de la variable (ej. "contador")
         String nombreVar = ctx.ID().getText();
-        
-        // 2. Calculamos el nuevo valor evaluando la expresión (ej. 5 - 1)
-        Object nuevoValor = visit(ctx.expresion());
-        
-        // 3. ¡El paso vital! Sobrescribimos el valor en la memoria del Intérprete
-        memoria.put(nombreVar, nuevoValor); 
-        // Nota: si tu HashMap en esta clase se llama distinto (ej. 'tablaVariables'), 
-        // cambia 'memoria' por ese nombre.
+    
+        // 1. Verificar si la variable existe en memoria antes de asignar
+        if (!memoria.containsKey(nombreVar)) {
+            throw new RuntimeException("ERROR SEMANTICO: La variable '" + nombreVar + "' no ha sido declarada.");
+        }
 
+        Object nuevoValor = visit(ctx.expresion());
+        Object valorAnterior = memoria.get(nombreVar);
+
+        // 2. Validación de tipos (Opcional, pero recomendada para ver el ROJO)
+        // Si la variable ya tenía un número y ahora le quieres meter un String (como en tu prueba)
+        if (valorAnterior instanceof Number && nuevoValor instanceof String) {
+            throw new RuntimeException("ERROR DE TIPOS: No se puede asignar una CADENA a la variable numerica '" + nombreVar + "'.");
+        }
+
+        memoria.put(nombreVar, nuevoValor); 
         return null;
     }
 
@@ -73,10 +86,15 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
     @Override
     public Object visitVariable(AcaLangParser.VariableContext ctx) {
         String nombreVar = ctx.ID().getText();
+    
+        // Si la variable existe en nuestra "RAM" (HashMap)
         if (memoria.containsKey(nombreVar)) {
             return memoria.get(nombreVar);
         }
-        return 0; // Valor por defecto si no existe
+    
+        // ¡Aquí está la magia del rojo! 
+        // En lugar de retornar 0, lanzamos un error que detiene todo.
+        throw new RuntimeException("ERROR SEMANTICO: La variable '" + nombreVar + "' no ha sido definida.");
     }
 
     // Matemáticas: Suma y Resta (Soporta Decimales y Textos)
@@ -84,45 +102,57 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
     public Object visitSuma(AcaLangParser.SumaContext ctx) {
         Object izq = visit(ctx.expresion(0));
         Object der = visit(ctx.expresion(1));
-        String operador = ctx.getChild(1).getText();
-
-        // REGLA 1: Si alguno es String, concatenamos textos
-        if (izq instanceof String || der instanceof String) {
-            if (operador.equals("+")) {
-                return String.valueOf(izq) + String.valueOf(der);
-            }
+    
+        // Protección: Si algo falló arriba y llega nulo, lanzamos el error en ROJO
+        if (izq == null || der == null) {
+            throw new RuntimeException("ERROR: Se intentó operar con un valor nulo. Revisa los paréntesis o variables.");
         }
 
-        // REGLA 2: Si ambos son números (Enteros o Decimales)
+        String operador = ctx.getChild(1).getText();
+
+        // REGLA 1: Operaciones Numéricas
         if (izq instanceof Number && der instanceof Number) {
             double n1 = ((Number) izq).doubleValue();
             double n2 = ((Number) der).doubleValue();
-
             double res = operador.equals("+") ? n1 + n2 : n1 - n2;
-
-            // Si el resultado no tiene decimales (ej. 20.0), lo devolvemos como entero
             return (res % 1 == 0) ? (int) res : res;
         }
 
-        return 0; 
-    }
+        // REGLA 2: Concatenación Universal (Maneja Cadenas, Booleanos, etc.)
+        if (operador.equals("+")) {
+            // String.valueOf convierte automáticamente true -> "true", 10 -> "10", etc.
+            return String.valueOf(izq) + String.valueOf(der);
+        }
 
-    // 5. Matemáticas: Multiplicación y División
+        // Si intenta restar un texto o booleano, lanzamos error
+        throw new RuntimeException("ERROR: No se puede realizar la operación '" + operador + "' con estos tipos de datos.");
+    }
+    
     @Override
     public Object visitMultiplicacion(AcaLangParser.MultiplicacionContext ctx) {
         Object izq = visit(ctx.expresion(0));
         Object der = visit(ctx.expresion(1));
+    
+        if (izq == null || der == null) {
+            throw new RuntimeException("ERROR: Operación matemática con valor nulo.");
+        }
+
         String operador = ctx.getChild(1).getText();
 
         if (izq instanceof Number && der instanceof Number) {
             double n1 = ((Number) izq).doubleValue();
             double n2 = ((Number) der).doubleValue();
 
-            double res = operador.equals("*") ? n1 * n2 : n1 / n2;
+            // Validación extra: División por cero
+            if (operador.equals("/") && n2 == 0) {
+                throw new RuntimeException("ERROR: División por cero.");
+            }
 
+            double res = operador.equals("*") ? n1 * n2 : n1 / n2;
             return (res % 1 == 0) ? (int) res : res;
         }
-        return 0;
+    
+        throw new RuntimeException("ERROR: Solo se pueden multiplicar o dividir números.");
     }
     
     // 6. Operadores Relacionales (Comparaciones)
@@ -131,7 +161,12 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         Object izq = visit(ctx.expresion(0));
         Object der = visit(ctx.expresion(1));
         
-        // Ahora obtenemos el operador usando la etiqueta 'op' que definimos en el .g4
+        // --- PROTECCIÓN ANTI-NULL ---
+        if (izq == null || der == null) {
+            String parteFaltante = (izq == null) ? "izquierda" : "derecha";
+            throw new RuntimeException("ERROR: El valor de la " + parteFaltante + " en la comparación es nulo. ¿Faltará el método visitParentesis?");
+        }
+
         String operador = ctx.op.getText();
 
         if (izq instanceof Number && der instanceof Number) {
@@ -153,12 +188,6 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         if (operador.equals("!=")) return !izq.equals(der);
 
         return false;
-    }
-    
-    @Override
-    public Object visitBooleano(AcaLangParser.BooleanoContext ctx) {
-        // "verdadero" -> true, "falso" -> false
-        return ctx.getText().equals("verdadero");
     }
     
     //Condicional SI / SINO
