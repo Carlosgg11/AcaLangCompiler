@@ -9,9 +9,14 @@ import java.util.HashMap;
 public class Interprete extends AcaLangBaseVisitor<Object> {
     
     // Nuestra Memoria RAM virtual
-    private HashMap<String, Object> memoria = new HashMap<>();
+    public HashMap<String, Object> memoria = new HashMap<>();
+    
+    // Msource AnalizadorAcaLangCompiétodo para limpiar la memoria antes de cada "Play"
+    public void limpiarMemoria() {
+        memoria.clear();
+    }
 
-    // 1. Declaración y Asignación
+    // Declaración y Asignación
     @Override
     public Object visitDeclaracion(AcaLangParser.DeclaracionContext ctx) {
         String nombreVar = ctx.ID().getText();
@@ -22,7 +27,7 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         return null;
     }
     
-    // 9. Asignación de variables (Actualizar valores)
+    // Asignación de variables (Actualizar valores)
     @Override
     public Object visitAsignacion(AcaLangParser.AsignacionContext ctx) {
         // 1. Obtenemos el nombre de la variable (ej. "contador")
@@ -39,7 +44,7 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         return null;
     }
 
-    // 2. Instrucción imprimir
+    // Instrucción imprimir
     @Override
     public Object visitImprimir(AcaLangParser.ImprimirContext ctx) {
         Object valor = visit(ctx.expresion());
@@ -74,7 +79,7 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         return 0; // Valor por defecto si no existe
     }
 
-    // 4. Matemáticas: Suma y Resta (Soporta Decimales y Textos)
+    // Matemáticas: Suma y Resta (Soporta Decimales y Textos)
     @Override
     public Object visitSuma(AcaLangParser.SumaContext ctx) {
         Object izq = visit(ctx.expresion(0));
@@ -125,16 +130,17 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
     public Object visitComparacion(AcaLangParser.ComparacionContext ctx) {
         Object izq = visit(ctx.expresion(0));
         Object der = visit(ctx.expresion(1));
-        String operador = ctx.getChild(1).getText();
+        
+        // Ahora obtenemos el operador usando la etiqueta 'op' que definimos en el .g4
+        String operador = ctx.op.getText();
 
-        // 1. Si estamos comparando números (Enteros o Decimales)
         if (izq instanceof Number && der instanceof Number) {
             double n1 = ((Number) izq).doubleValue();
             double n2 = ((Number) der).doubleValue();
 
             switch (operador) {
-                case ">": return n1 > n2;
-                case "<": return n1 < n2;
+                case ">":  return n1 > n2;
+                case "<":  return n1 < n2;
                 case ">=": return n1 >= n2;
                 case "<=": return n1 <= n2;
                 case "==": return n1 == n2;
@@ -142,18 +148,20 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
             }
         }
 
-        // 2. Si estamos comparando textos u otras cosas (Solo soportan == y !=)
-        if (operador.equals("==")) {
-            return izq.equals(der);
-        }
-        if (operador.equals("!=")) {
-            return !izq.equals(der);
-        }
+        // Comparación para cadenas o booleanos
+        if (operador.equals("==")) return izq.equals(der);
+        if (operador.equals("!=")) return !izq.equals(der);
 
         return false;
     }
     
-    // 7. Condicional SI / SINO
+    @Override
+    public Object visitBooleano(AcaLangParser.BooleanoContext ctx) {
+        // "verdadero" -> true, "falso" -> false
+        return ctx.getText().equals("verdadero");
+    }
+    
+    //Condicional SI / SINO
     @Override
     public Object visitSiCondicional(AcaLangParser.SiCondicionalContext ctx) {
         // 1. Evaluamos la condición (nos devolverá un true o false gracias a visitComparacion)
@@ -175,7 +183,7 @@ public class Interprete extends AcaLangBaseVisitor<Object> {
         return null;
     }
     
-    // 8. Ciclo MIENTRAS
+    //Ciclo MIENTRAS
     @Override
     public Object visitMientras(AcaLangParser.MientrasContext ctx) {
         // Un ciclo 'mientras' se repite continuamente evaluando la condición

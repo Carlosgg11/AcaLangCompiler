@@ -1,6 +1,5 @@
 grammar AcaLang;
 
-// Definición del paquete para que coincida con tu proyecto
 @header {
 package com.mycompany.acalangcompiler;
 }
@@ -10,18 +9,18 @@ programa    : (declaracion | instruccion)+ ;
 
 declaracion : tipo ID (IGUAL expresion)? PUNTO_COMA ;
 
-tipo        : 'ent' | 'dec' | 'bol' | 'cad' ;
+tipo        : T_ENT | T_DEC | T_BOL | T_CAD ;
 
-instruccion : ID IGUAL expresion PUNTO_COMA                                                     # Asignacion
-            | 'imprimir' PAREN_ABRE expresion PAREN_CIERRA PUNTO_COMA                           # Imprimir
-            | 'si' PAREN_ABRE expresion PAREN_CIERRA LLAVE_ABRE programa LLAVE_CIERRA
-                ('sino' LLAVE_ABRE programa LLAVE_CIERRA)?                                      # SiCondicional
-            | 'mientras' PAREN_ABRE expresion PAREN_CIERRA LLAVE_ABRE programa LLAVE_CIERRA     # Mientras
+instruccion : ID IGUAL expresion PUNTO_COMA                                     # Asignacion
+            | IMPRIMIR PAREN_ABRE expresion PAREN_CIERRA PUNTO_COMA                # Imprimir
+            | SI PAREN_ABRE expresion PAREN_CIERRA LLAVE_ABRE programa LLAVE_CIERRA
+                (SINO LLAVE_ABRE programa LLAVE_CIERRA)?                         # SiCondicional
+            | MIENTRAS PAREN_ABRE expresion PAREN_CIERRA LLAVE_ABRE programa LLAVE_CIERRA # Mientras
             ;
 
 expresion   : expresion (MULT | DIV) expresion                           # Multiplicacion
             | expresion (SUMA | RESTA) expresion                         # Suma
-            | expresion ('>' | '<' | '>=' | '<=' | '==' | '!=') expresion # Comparacion
+            | expresion op=OP_COMP expresion                             # Comparacion
             | PAREN_ABRE expresion PAREN_CIERRA                          # Parentesis
             | ID                                                         # Variable
             | LIT_ENT                                                    # Entero
@@ -31,6 +30,20 @@ expresion   : expresion (MULT | DIV) expresion                           # Multi
             ;
 
 // --- 2. REGLAS LÉXICAS (Tokens) ---
+
+// Palabras Reservadas (Keywords)
+SI       : 'si' ;
+SINO     : 'sino' ;
+MIENTRAS : 'mientras' ;
+IMPRIMIR : 'imprimir' ;
+
+// Tipos de Datos
+T_ENT    : 'ent' ;
+T_DEC    : 'dec' ;
+T_BOL    : 'bol' ;
+T_CAD    : 'cad' ;
+
+// Operadores y Símbolos
 IGUAL      : '=' ;
 PUNTO_COMA : ';' ;
 SUMA       : '+' ;
@@ -39,14 +52,20 @@ MULT       : '*' ;
 DIV        : '/' ;
 PAREN_ABRE : '(' ;
 PAREN_CIERRA: ')' ;
-
 LLAVE_ABRE  : '{' ;
 LLAVE_CIERRA: '}' ;
 
+// Operadores de Comparación (Agrupados para el Analizador Léxico)
+OP_COMP    : '>=' | '<=' | '==' | '!=' | '>' | '<' ;
+
+// Literales
 LIT_ENT    : [0-9]+ ;
 LIT_DEC    : [0-9]+ '.' [0-9]+ ;
 LIT_CAD    : '"' ( ~["] )* '"' ;
 LIT_BOL    : 'verdadero' | 'falso' ;
+
+// Identificadores
 ID         : [a-zA-Z][a-zA-Z0-9_]* ;
 
-WS         : [ \t\r\n]+ -> skip ; // Ignorar espacios y saltos de línea
+// Ignorar espacios
+WS         : [ \t\r\n]+ -> skip ;

@@ -11,12 +11,19 @@ public class AcaLangCompiler {
     public static void main(String[] args) {
         try {
             
-            String input = "ent contador = 5; " +
-               "mientras (contador > 0) { " +
-               "    imprimir(contador); " +
-               "    contador = contador - 1; " +
+            String input = "ent nota = 85; " +
+               "si (nota >= 61) { " +
+               "    imprimir(\"Felicidades, aprobaste el curso\"); " +
+               "} sino { " +
+               "    imprimir(\"Lo siento, debes repetir\"); " +
                "} " +
-               "imprimir(\"¡Despegue!\");";
+               "ent otraNota = 50; " +
+               "si (otraNota >= 61) { " +
+               "    imprimir(\"Felicidades, aprobaste el curso\"); " +
+               "} sino { " +
+               "    imprimir(\"Lo siento, debes repetir\"); " +
+               "}";
+                     
 
             System.out.println("--- Iniciando Compilacion ---");
 
